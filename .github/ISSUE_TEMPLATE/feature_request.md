@@ -1,8 +1,8 @@
 ---
-name: Bug report
-about: Bug fix
-title: "[BUG]"
-labels: bug, fix
+name: Feature request
+about: 기능 개발
+title: "[FEAT]"
+labels: enhancement, feat
 assignees: ''
 
 ---
@@ -13,7 +13,7 @@ assignees: ''
 
 ## 📝 TO DO
 ***
-- []
+- [ ]
 
 ## 💌 비고
 ***
