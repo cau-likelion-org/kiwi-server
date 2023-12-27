@@ -30,13 +30,9 @@ class HistoryDocSerializer(serializers.ModelSerializer):
         
         for generation_data in generations_data:
             Generation.objects.create(title=history_doc, **generation_data)
-
-        CurrDoc.objects.update_or_create(
-            title=history_doc.title,
-            defaults={'historydoc': history_doc}
-        )
-
+        
         return history_doc
 
     def get_author(self, obj):
         return obj.author.name
+    
