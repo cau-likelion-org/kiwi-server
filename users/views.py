@@ -7,6 +7,7 @@ import requests
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
+from random import *
 from .models import *
 
 
@@ -22,6 +23,28 @@ def get_secret(setting, secrets=secrets):
     except KeyError:
         error_msg = "Set the {} environment variable".format(setting)
         raise ImproperlyConfigured(error_msg)
+
+adj = []
+noun = []
+
+def save_words():
+    random_adj = os.path.join(BASE_DIR, 'random-adj.txt')
+    random_noun = os.path.join(BASE_DIR, 'random-noun.txt')
+
+    fa = open(random_adj, 'r', encoding='UTF8')
+    while True:
+        line = fa.readline().strip()
+        if not line: 
+            break
+        adj.append(line)
+    
+    fn = open(random_noun, 'r', encoding='UTF8')
+    while True:
+        line = fn.readline().strip()
+        if not line: 
+            break
+        noun.append(line)
+
         
 BASE_URL = get_secret("BASE_URL")
 GOOGLE_CALLBACK_URI = BASE_URL + "users/google/callback/"
@@ -147,6 +170,28 @@ class CheckNameView(APIView):
             return JsonResponse({
                 "status" : "200",
                 "message" : "Nickname Available",
+                "data" : {
+                    "name" : name
+                }
+            }, status=status.HTTP_200_OK)
+
+class RandomNameView(APIView):
+    def get(self, request):
+        if len(adj) == 0 or len(noun) == 0:
+            save_words()
+
+        rand_adj = adj[randrange(200)]
+        rand_noun = noun[randrange(200)]
+        name = rand_adj + " " + rand_noun
+
+        while check_name(name):         # 랜덤 닉네임 중복 없을 때까지 반복
+            rand_adj = adj[randrange(200)]
+            rand_noun = noun[randrange(200)]
+            name = rand_adj + " " + rand_noun
+
+        return JsonResponse({
+                "status" : "200",
+                "message" : "Random Nickname",
                 "data" : {
                     "name" : name
                 }

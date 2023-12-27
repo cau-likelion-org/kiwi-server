@@ -176,3 +176,5 @@ cython_debug/
 secrets.json
 migrations
 .vscode
+random-noun.txt
+random-adj.txt
