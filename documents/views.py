@@ -5,6 +5,20 @@ from rest_framework.response import Response
 from .models import HistoryDoc
 from .serializers import HistoryDocSerializer
 
+# 문서 생성
+class HistoryDocCreateAPI(APIView):
+    def post(self, request):
+        if request.user.is_authenticated:
+            serializer = HistoryDocSerializer(data=request.data, context={'request': request})
+            if serializer.is_valid():
+                history_doc = serializer.save(author=request.user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'message': '로그인이 필요합니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+
 # 최근 편집된 전체 문서 목록
 class RecentEditedDocumentsAPI(APIView):
     def get(self, request):
@@ -32,3 +46,16 @@ class DocumentEditHistoryAPI(APIView):
             "message": "success",
             "data": serializer.data
         })
+
+# 특정 문서 중 가장 최신의 문서 가져오기
+class DocDetailAPI(APIView):
+     def get(self, request, title, format =None):
+        try:
+            latest_doc = HistoryDoc.objects.filter(title=title).latest('created_at')
+            serializer = HistoryDocSerializer(latest_doc)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except HistoryDoc.DoesNotExist:
+            return Response({
+                'message': 'Document does not exist'
+                }, 
+                status=status.HTTP_404_NOT_FOUND)
