@@ -9,8 +9,9 @@ class HistoryDoc(models.Model):
     content = models.TextField(null=True)
 
 class CurrDoc(models.Model):
-    title = models.ForeignKey(HistoryDoc, on_delete=models.CASCADE, related_name='curr_docs')
-    updated_at = models.ForeignKey(HistoryDoc, on_delete=models.CASCADE, related_name='curr_docs_updated')
+    history_doc = models.ForeignKey(HistoryDoc, on_delete=models.CASCADE, related_name='curr_docs')
+    title = models.CharField(max_length=30)  
+    updated_at = models.DateTimeField(auto_now_add=True)
 
 class BackLink(models.Model):
     src = models.ForeignKey(CurrDoc, on_delete=models.CASCADE, related_name='backlink_src')
@@ -19,3 +20,5 @@ class BackLink(models.Model):
 class Generation(models.Model):
     title = models.ForeignKey(HistoryDoc, on_delete=models.CASCADE, related_name='generations')
     generation = models.IntegerField()
+
+
