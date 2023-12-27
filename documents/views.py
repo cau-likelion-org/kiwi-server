@@ -1,9 +1,10 @@
 from django.shortcuts import render
+from django.db.models import Max
 from random import choice
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import HistoryDoc,CurrDoc
+from .models import HistoryDoc, CurrDoc, Generation
 from .serializers import HistoryDocSerializer
 
 # 문서 생성
@@ -14,9 +15,14 @@ class HistoryDocCreateAPI(APIView):
             if serializer.is_valid():
                 history_doc = serializer.save(author=request.user)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response({"message": "Failed to create Doc"}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "message": "Failed to create Doc"}, 
+                serializer.errors, 
+                status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'message': '로그인이 필요합니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({
+                'message': '로그인이 필요합니다.'}, 
+                status=status.HTTP_401_UNAUTHORIZED)
 
 
 # 최근 편집된 전체 문서 목록
@@ -56,8 +62,7 @@ class DocDetailAPI(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except CurrDoc.DoesNotExist:
             return Response({
-                'message': 'Document with the given title does not exist'
-                }, 
+                'message': 'Document with the given title does not exist'}, 
                 status=status.HTTP_404_NOT_FOUND)
          
 
@@ -71,5 +76,26 @@ class RandomDocAPI(APIView):
             serializer = HistoryDocSerializer(random_doc.history_doc)
             return Response(serializer.data) 
         else:
-            return Response({"error": "No documents found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                "message": "No documents found"}, 
+                status=status.HTTP_404_NOT_FOUND)
 
+# generation으로 분류된 문서 전체 조회
+class GenerationFilteredDocAPI(APIView):
+    def get(self, request, generation=None):
+        if generation is not None:
+            queryset = HistoryDoc.objects.filter(generations__generation=generation)\
+                                         .annotate(max_id=Max('id'))\
+                                         .filter(id=Max('id'))\
+                                         .filter(curr_docs__isnull=False)
+        else:
+            queryset = HistoryDoc.objects.all()
+        serializer = HistoryDocSerializer(queryset, many=True)
+
+        if queryset.exists():  
+            serializer = HistoryDocSerializer(queryset, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({
+                "message": "No documents found"}, 
+                status=status.HTTP_404_NOT_FOUND)
