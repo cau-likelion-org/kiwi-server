@@ -47,7 +47,7 @@ class DocumentEditHistoryAPI(APIView):
             "data": serializer.data
         })
 
-# 특정 문서 중 가장 최신의 문서 가져오기
+# 특정 문서 중 가장 최신의 문서 가져오기(CurrDoc 활용)
 class DocDetailAPI(APIView):
      def get(self, request, title, format=None):
         try:
@@ -61,16 +61,14 @@ class DocDetailAPI(APIView):
                 status=status.HTTP_404_NOT_FOUND)
          
 
-# 임의 문서 가져오기(CurrDoc 활용)
+# 임의 문서 가져오기
 class RandomDocAPI(APIView):
     def get(self, request, format=None):
-        docs = HistoryDoc.objects.all()
-        if docs.exists():
-            # 랜덤한 문서뽑기
-            random_doc = choice(docs)
-            # 같은 title에 대해 최신 문서 가져오기
-            latest_doc = HistoryDoc.objects.filter(title=random_doc.title).order_by("-created_at").first()
-            serializer = HistoryDocSerializer(data = latest_doc.data)
+        curr_docs = CurrDoc.objects.all()
+        if curr_docs.exists():
+            # 랜덤한 CurrDoc 선택
+            random_doc = choice(list(curr_docs))
+            serializer = HistoryDocSerializer(random_doc.history_doc)
             return Response(serializer.data) 
         else:
             return Response({"error": "No documents found"}, status=status.HTTP_404_NOT_FOUND)
