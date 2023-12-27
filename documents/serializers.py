@@ -31,6 +31,15 @@ class HistoryDocSerializer(serializers.ModelSerializer):
         for generation_data in generations_data:
             Generation.objects.create(title=history_doc, **generation_data)
         
+    
+        curr_doc = CurrDoc.objects.filter(history_doc__title=history_doc.title).first()
+
+        if curr_doc is None:
+            curr_doc = CurrDoc.objects.create(history_doc=history_doc)
+        else:  
+            curr_doc.history_doc = history_doc
+            curr_doc.save()
+
         return history_doc
 
     def get_author(self, obj):
