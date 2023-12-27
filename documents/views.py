@@ -59,8 +59,9 @@ class DocDetailAPI(APIView):
                 'message': 'Document with the given title does not exist'
                 }, 
                 status=status.HTTP_404_NOT_FOUND)
-        
-# 임의 문서 가져오기
+         
+
+# 임의 문서 가져오기(CurrDoc 활용)
 class RandomDocAPI(APIView):
     def get(self, request, format=None):
         docs = HistoryDoc.objects.all()
