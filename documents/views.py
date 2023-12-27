@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.db.models import Max
+from django.db.models import Q
 from random import choice
 from rest_framework import status
 from rest_framework.views import APIView
@@ -99,3 +100,17 @@ class GenerationFilteredDocAPI(APIView):
             return Response({
                 "message": "No documents found"}, 
                 status=status.HTTP_404_NOT_FOUND)
+
+class SearchHistoryDocAPI(APIView):
+    def get(self, request,keyword):
+        queryset = HistoryDoc.objects.filter(Q(title__icontains = keyword) | Q(content__icontains = keyword), curr_docs__isnull=False)\
+        .order_by('-created_at')[:3]
+
+        if queryset.exists():
+            serializer = HistoryDocSerializer(queryset, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({
+                "message" : "No documents found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
