@@ -5,7 +5,7 @@ from random import choice
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import HistoryDoc, CurrDoc, Generation
+from .models import HistoryDoc, CurrDoc, Generation, BackLink
 from .serializers import HistoryDocSerializer
 from .service import *
 
@@ -141,3 +141,24 @@ class DocumentEditComparisonAPI(APIView):
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+#역링크
+class BackLinkAPI(APIView):
+    def get(self, request, title):
+        print("Title received: ", title)
+        currdocs = CurrDoc.objects.exclude(title=title)
+        backlinks_created = []
+
+        for currdoc in currdocs:
+            historydoc = currdoc.history_doc
+            if 'http://127.0.0.1:8000/docs/recent/{}'.format(title) in historydoc.content:
+                referenced_currdoc = CurrDoc.objects.filter(title=title).first()
+                if referenced_currdoc:
+                    BackLink.objects.create(src=currdoc, dst=referenced_currdoc)
+                    backlinks_created.append(currdoc.title)
+                else:
+                    print("CurrDoc with title {} does not exist.".format(title))
+            else:
+                print("backlink not found in historydoc content.")
+        
+        return Response({"message": "Backlink creation process completed.", "backlinks_created_for": backlinks_created})
