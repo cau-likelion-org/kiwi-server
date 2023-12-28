@@ -1,6 +1,12 @@
 from rest_framework import serializers
 from .models import HistoryDoc, Generation, CurrDoc
 from users.models import User
+import boto3
+import os
+import uuid
+from django.conf import settings
+
+
 
 
 class GenerationSerializer(serializers.ModelSerializer):
@@ -46,3 +52,36 @@ class HistoryDocSerializer(serializers.ModelSerializer):
     def get_author(self, obj):
         return obj.author.name
     
+
+
+class ImageUploadSerializer(serializers.Serializer):
+    file = serializers.ImageField()
+
+    def create(self, validated_data):
+        file_obj = validated_data['file']
+
+       
+        extension = os.path.splitext(file_obj.name)[1]
+
+        random_uuid = str(uuid.uuid4())
+        new_file_name = random_uuid + extension
+
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID_S3,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY_S3,
+            region_name=settings.AWS_REGION,
+        )
+
+        response = s3_client.put_object(
+            Body=file_obj.read(),
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            Key=new_file_name,  
+            ContentType=file_obj.content_type,
+            ContentDisposition='inline',
+            CacheControl=settings.AWS_S3_OBJECT_PARAMETERS['CacheControl'],
+        )
+
+        url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{new_file_name}" 
+
+        return {'url': url}
