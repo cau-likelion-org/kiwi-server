@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import HistoryDoc,CurrDoc
 from .serializers import HistoryDocSerializer
+from .service import *
 
 # 문서 생성
 class HistoryDocCreateAPI(APIView):
@@ -75,3 +76,28 @@ class RandomDocAPI(APIView):
         else:
             return Response({"error": "No documents found"}, status=status.HTTP_404_NOT_FOUND)
 
+# 특정 문서의 편집 변경 사항
+class DocumentEditComparisonAPI(APIView):
+    def get(self, request, title):
+        docs = HistoryDoc.objects.filter(title=title).order_by('-updated_at')
+
+        if not docs.exists():
+            return Response({"message": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            for i in range(len(docs) - 1):
+                old_doc = docs[i + 1].content
+                new_doc = docs[i].content
+                comparison = diff_strings(old_doc, new_doc)
+                serializer = HistoryDocSerializer(docs[i])
+                data = serializer.data
+                data['change'] = comparison
+
+            return Response({
+                "status": "200",
+                "message": "success",
+                "data": data
+            })
+
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
