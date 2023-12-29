@@ -19,6 +19,6 @@ class BackLink(models.Model):
 
 class Generation(models.Model):
     title = models.ForeignKey(HistoryDoc, on_delete=models.CASCADE, related_name='generations')
-    generation = models.IntegerField()
+    generation = models.CharField(max_length=10)
 
 
