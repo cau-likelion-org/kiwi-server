@@ -24,6 +24,7 @@ class HistoryDocSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         generations_data = validated_data.pop('generations')
         author = self.context['request'].user
+        title = validated_data.get('title')
         
         history_data = {**validated_data, 'author': author}
         history_doc = HistoryDoc.objects.create(**history_data)
@@ -31,13 +32,13 @@ class HistoryDocSerializer(serializers.ModelSerializer):
         for generation_data in generations_data:
             Generation.objects.create(title=history_doc, **generation_data)
         
-    
         curr_doc = CurrDoc.objects.filter(history_doc__title=history_doc.title).first()
-
+       
         if curr_doc is None:
-            curr_doc = CurrDoc.objects.create(history_doc=history_doc)
+            curr_doc = CurrDoc.objects.create(history_doc=history_doc, title= title)
         else:  
             curr_doc.history_doc = history_doc
+            curr_doc.title = title
             curr_doc.save()
 
         return history_doc
