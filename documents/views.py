@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import HistoryDoc, CurrDoc, Generation, BackLink
-from .serializers import HistoryDocSerializer
+from .serializers import HistoryDocSerializer, ImageUploadSerializer
 from .service import *
 
 # 문서 생성
@@ -162,3 +162,15 @@ class BackLinkAPI(APIView):
                 print("backlink not found in historydoc content.")
         
         return Response({"message": "Backlink creation process completed.", "backlinks_created_for": backlinks_created})
+
+
+#이미지 반환
+class ImageUploadView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = ImageUploadSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            url = serializer.save()
+            return Response(url, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
