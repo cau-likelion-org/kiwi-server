@@ -55,16 +55,16 @@ class HistoryDocSerializer(serializers.ModelSerializer):
 
 
 class ImageUploadSerializer(serializers.Serializer):
-    file = serializers.ImageField()
+    image = serializers.ImageField()
 
     def create(self, validated_data):
-        file_obj = validated_data['file']
+        image_obj = validated_data['image']
 
        
-        extension = os.path.splitext(file_obj.name)[1]
+        extension = os.path.splitext(image_obj.name)[1]
 
         random_uuid = str(uuid.uuid4())
-        new_file_name = random_uuid + extension
+        new_image_name = random_uuid + extension
 
         s3_client = boto3.client(
             's3',
@@ -74,14 +74,14 @@ class ImageUploadSerializer(serializers.Serializer):
         )
 
         response = s3_client.put_object(
-            Body=file_obj.read(),
+            Body=image_obj.read(),
             Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-            Key=new_file_name,  
-            ContentType=file_obj.content_type,
+            Key=new_image_name,  
+            ContentType=image_obj.content_type,
             ContentDisposition='inline',
             CacheControl=settings.AWS_S3_OBJECT_PARAMETERS['CacheControl'],
         )
 
-        url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{new_file_name}" 
+        url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{new_image_name}" 
 
-        return {'url': url}
+        return {'image': url}
