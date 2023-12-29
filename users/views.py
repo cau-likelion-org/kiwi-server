@@ -66,9 +66,9 @@ def check_name(name):
 def google_callback(request):
     client_id = get_secret("GOOGLE_CLIENT_ID")
     client_secret = get_secret("GOOGLE_SECRET")
-    # body = json.loads(request.body.decode('utf-8'))
-    # code = body['code']
-    code = request.GET.get('code')
+    body = json.loads(request.body.decode('utf-8'))
+    code = body['code']
+    # code = request.GET.get('code')
     
     token_req = requests.post(f"https://oauth2.googleapis.com/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={GOOGLE_CALLBACK_URI}")
     token_req_json = token_req.json()
