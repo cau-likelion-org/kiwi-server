@@ -18,8 +18,7 @@ class HistoryDocCreateAPI(APIView):
                 history_doc = serializer.save(author=request.user)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response({
-                "message": "Failed to create Doc"}, 
-                serializer.errors, 
+                "message": "Failed to create Doc"},
                 status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({
