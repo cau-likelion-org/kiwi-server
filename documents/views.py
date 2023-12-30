@@ -120,18 +120,21 @@ class GenerationFilteredDocAPI(APIView):
 
 #문서 검색
 class SearchHistoryDocAPI(APIView):
-    def get(self, request,keyword):
-        queryset = HistoryDoc.objects.filter(Q(title__iexact = keyword) | Q(content__icontains = keyword), curr_docs__isnull=False)\
-        .order_by('-created_at')[:3]
-
-        if queryset.exists():
-            serializer = HistoryDocSerializer(queryset, many=True, context={'keyword': keyword})
+    def get(self, request, keyword):
+        # title과 정확히 일치하는 문서 찾기
+        exact_match = HistoryDoc.objects.filter(title=keyword)
+        if exact_match.exists():
+            # 일치하는 문서가 있다면, 그 문서만 반환
+            serializer = HistoryDocSerializer(exact_match[0])
+            data = serializer.data
+            data['titleMatched'] = True
+            return Response(data)
+        else :
+            partial_match = HistoryDoc.objects.filter(Q(title__contains=keyword) | Q(content__contains=keyword))[:3]
+            serializer = HistoryDocSerializer(partial_match, many=True)
             return Response(serializer.data)
-        else:
-            return Response({
-                "message" : "No documents found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+       
+        
 
 # 특정 문서의 편집 변경 사항
 class DocumentEditComparisonAPI(APIView):
@@ -186,7 +189,8 @@ class BackLinkAPI(APIView):
 class ImageUploadView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = ImageUploadSerializer(data=request.data)
-        
+        data = serializer.data
+        print(data)
         if serializer.is_valid():
             url = serializer.save()
             return Response(url, status=status.HTTP_201_CREATED)

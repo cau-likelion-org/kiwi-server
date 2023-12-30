@@ -55,8 +55,8 @@ class HistoryDocSerializer(serializers.ModelSerializer):
     
     def get_titleMatched(self, obj):
         keyword = self.context.get('keyword','')
-        print("Keyword:", keyword)
-        return keyword == obj.title.strip()
+        #print("Keyword:", keyword)
+        return keyword == obj.title
     
 
 
