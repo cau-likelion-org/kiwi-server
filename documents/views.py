@@ -101,13 +101,14 @@ class GenerationFilteredDocAPI(APIView):
                 "message": "No documents found"}, 
                 status=status.HTTP_404_NOT_FOUND)
 
+#문서 검색
 class SearchHistoryDocAPI(APIView):
     def get(self, request,keyword):
-        queryset = HistoryDoc.objects.filter(Q(title__icontains = keyword) | Q(content__icontains = keyword), curr_docs__isnull=False)\
+        queryset = HistoryDoc.objects.filter(Q(title__iexact = keyword) | Q(content__icontains = keyword), curr_docs__isnull=False)\
         .order_by('-created_at')[:3]
 
         if queryset.exists():
-            serializer = HistoryDocSerializer(queryset, many=True)
+            serializer = HistoryDocSerializer(queryset, many=True, context={'keyword': keyword})
             return Response(serializer.data)
         else:
             return Response({
