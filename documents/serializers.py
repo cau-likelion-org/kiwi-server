@@ -18,10 +18,11 @@ class GenerationSerializer(serializers.ModelSerializer):
 class HistoryDocSerializer(serializers.ModelSerializer):
     generations = GenerationSerializer(many=True)
     author = serializers.SerializerMethodField()
+    titleMatched = serializers.SerializerMethodField()
 
     class Meta:
         model = HistoryDoc
-        fields = ['id', 'title', 'generations', 'updated_at', 'created_at', 'author', 'content']
+        fields = ['id', 'title', 'generations', 'updated_at', 'created_at', 'author', 'content', 'titleMatched']
 
     def get_generations(self, obj):
         generations = Generation.objects.filter(title=obj).values_list('generation', flat=True)
@@ -51,6 +52,11 @@ class HistoryDocSerializer(serializers.ModelSerializer):
 
     def get_author(self, obj):
         return obj.author.name
+    
+    def get_titleMatched(self, obj):
+        keyword = self.context.get('keyword','')
+        print("Keyword:", keyword)
+        return keyword == obj.title.strip()
     
 
 
