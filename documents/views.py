@@ -43,16 +43,33 @@ class RecentEditedDocumentsAPI(APIView):
 # 특정 문서의 전체 편집 목록
 class DocumentEditHistoryAPI(APIView):
     def get(self, request, title):
-        if not HistoryDoc.objects.filter(title=title).exists():
+        docs = HistoryDoc.objects.filter(title=title).order_by('-updated_at')
+
+        if not docs.exists():
             return Response({"message": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
-        docs = HistoryDoc.objects.filter(title=title).order_by('-updated_at')
-        serializer = HistoryDocSerializer(docs, many=True)
-        return Response({
-            "status": "200",
-            "message": "success",
-            "data": serializer.data
-        })
+        try:
+            data = []
+            for i in range(len(docs) - 1):
+                serializer_current = HistoryDocSerializer(docs[i])
+                serializer_previous = HistoryDocSerializer(docs[i + 1])
+
+                comparison = diff_strings(serializer_previous.data['content'], serializer_current.data['content'])
+                
+                doc_data = serializer_current.data
+                doc_data['change'] = comparison
+                data.append(doc_data)
+
+            if docs:
+                data.append(HistoryDocSerializer(docs.last()).data)
+
+            return Response({
+                "status": "200",
+                "message": "success",
+                "data": data
+            })
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 # 특정 문서 중 가장 최신의 문서 가져오기(CurrDoc 활용)
 class DocDetailAPI(APIView):
