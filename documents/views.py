@@ -5,6 +5,7 @@ from random import choice
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from .models import HistoryDoc, CurrDoc, Generation, BackLink
 from .serializers import HistoryDocSerializer, ImageUploadSerializer
 from .service import *
@@ -43,33 +44,16 @@ class RecentEditedDocumentsAPI(APIView):
 # 특정 문서의 전체 편집 목록
 class DocumentEditHistoryAPI(APIView):
     def get(self, request, title):
-        docs = HistoryDoc.objects.filter(title=title).order_by('-updated_at')
-
-        if not docs.exists():
+        if not HistoryDoc.objects.filter(title=title).exists():
             return Response({"message": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
-        try:
-            data = []
-            for i in range(len(docs) - 1):
-                serializer_current = HistoryDocSerializer(docs[i])
-                serializer_previous = HistoryDocSerializer(docs[i + 1])
-
-                comparison = diff_strings(serializer_previous.data['content'], serializer_current.data['content'])
-                
-                doc_data = serializer_current.data
-                doc_data['change'] = comparison
-                data.append(doc_data)
-
-            if docs:
-                data.append(HistoryDocSerializer(docs.last()).data)
-
-            return Response({
-                "status": "200",
-                "message": "success",
-                "data": data
-            })
-        except Exception as e:
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        docs = HistoryDoc.objects.filter(title=title).order_by('-updated_at')
+        serializer = HistoryDocSerializer(docs, many=True)
+        return Response({
+            "status": "200",
+            "message": "success",
+            "data": serializer.data
+        })
 
 # 특정 문서 중 가장 최신의 문서 가져오기(CurrDoc 활용)
 class DocDetailAPI(APIView):
@@ -185,14 +169,12 @@ class BackLinkAPI(APIView):
         return Response({"message": "Backlink creation process completed.", "backlinks_created_for": backlinks_created})
 
 
-#이미지 반환
+
 class ImageUploadView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = ImageUploadSerializer(data=request.data)
-        data = serializer.data
-        print(data)
         if serializer.is_valid():
-            url = serializer.save()
-            return Response(url, status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

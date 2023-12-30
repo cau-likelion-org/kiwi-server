@@ -62,11 +62,13 @@ class HistoryDocSerializer(serializers.ModelSerializer):
 
 class ImageUploadSerializer(serializers.Serializer):
     image = serializers.ImageField()
+    
 
     def create(self, validated_data):
+        #print(validated_data)
         image_obj = validated_data['image']
-
-       
+        #print(image_obj)  
+        #print(type(image_obj))  
         extension = os.path.splitext(image_obj.name)[1]
 
         random_uuid = str(uuid.uuid4())
@@ -87,7 +89,12 @@ class ImageUploadSerializer(serializers.Serializer):
             ContentDisposition='inline',
             CacheControl=settings.AWS_S3_OBJECT_PARAMETERS['CacheControl'],
         )
-
+        #print(response)
         url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{new_image_name}" 
-
+        #print(url) 
         return {'image': url}
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['image'] = instance['image']  
+        return ret
