@@ -44,10 +44,10 @@ class RecentEditedDocumentsAPI(APIView):
             "data": data
         })
 
-# 특정 문서의 전체 편집 목록
+#  특정 문서의 전체 편집 목록
 class DocumentEditHistoryAPI(APIView):
     def get(self, request, title):
-        docs = HistoryDoc.objects.filter(title=title).order_by('-updated_at').first()
+        docs = HistoryDoc.objects.filter(title=title).order_by('-updated_at')
 
         if not docs.exists():
             return Response({"message": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
