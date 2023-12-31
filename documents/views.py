@@ -26,25 +26,28 @@ class HistoryDocCreateAPI(APIView):
                 'message': '로그인이 필요합니다.'}, 
                 status=status.HTTP_401_UNAUTHORIZED)
 
-
 # 최근 편집된 전체 문서 목록
 class RecentEditedDocumentsAPI(APIView):
     def get(self, request):
-        try:
-            recent_docs = HistoryDoc.objects.order_by('-updated_at')[:5]
-            serializer = HistoryDocSerializer(recent_docs, many=True)
-            return Response({
-                "status": "200",
-                "message": "success",
-                "data": serializer.data
-            })
-        except Exception as e:
-            return Response({"message": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
+        latest_updates = HistoryDoc.objects.values('title').annotate(latest_update=Max('updated_at'))
+
+        data = []
+        for update in latest_updates[:5]:
+            docs = HistoryDoc.objects.filter(title=update['title'], updated_at=update['latest_update']).first()
+            if docs:
+                serializer = HistoryDocSerializer(docs)
+                data.append(serializer.data)
+
+        return Response({
+            "status": "200",
+            "message": "success",
+            "data": data
+        })
 
 # 특정 문서의 전체 편집 목록
 class DocumentEditHistoryAPI(APIView):
     def get(self, request, title):
-        docs = HistoryDoc.objects.filter(title=title).order_by('-updated_at')
+        docs = HistoryDoc.objects.filter(title=title).order_by('-updated_at').first()
 
         if not docs.exists():
             return Response({"message": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
