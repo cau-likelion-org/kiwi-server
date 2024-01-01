@@ -123,21 +123,38 @@ class GenerationFilteredDocAPI(APIView):
                 status=status.HTTP_404_NOT_FOUND)
 
 #문서 검색
+
 class SearchHistoryDocAPI(APIView):
     def get(self, request, keyword):
-        # title과 정확히 일치하는 문서 찾기
-        exact_match = HistoryDoc.objects.filter(title=keyword)
-        if exact_match.exists():
-            # 일치하는 문서가 있다면, 그 문서만 반환
-            serializer = HistoryDocSerializer(exact_match[0])
-            data = serializer.data
-            data['titleMatched'] = True
-            return Response(data)
-        else :
-            partial_match = HistoryDoc.objects.filter(Q(title__contains=keyword) | Q(content__contains=keyword))[:3]
-            serializer = HistoryDocSerializer(partial_match, many=True)
-            return Response(serializer.data)
-       
+        all_curr_docs = CurrDoc.objects.all()
+        exact_match = None
+        partial_match = []
+
+        # 모든 CurrDoc에 대해 검색
+        for curr_doc in all_curr_docs:
+            history_doc = curr_doc.history_doc
+
+            # title과 정확히 일치하는 문서 찾기
+            if history_doc.title == keyword:
+                serializer = HistoryDocSerializer(history_doc)
+                data = serializer.data
+                data['titleMatched'] = True
+                exact_match = data
+                break  
+            # 부분 일치하는 문서 찾기
+            elif keyword in history_doc.title or keyword in history_doc.content:
+                serializer = HistoryDocSerializer(history_doc)
+                partial_match.append(serializer.data)
+                if len(partial_match) == 3:  
+                    break
+
+        # 일치하는 문서가 있으면 그 문서만 반환
+        if exact_match:
+            return Response(exact_match)
+        # 일치하는 문서가 없으면 부분 일치하는 문서 3개 반환
+        else:
+            return Response(partial_match)
+
         
 
 # 특정 문서의 편집 변경 사항
