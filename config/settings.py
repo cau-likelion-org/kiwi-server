@@ -99,6 +99,7 @@ ROOT_URLCONF = 'config.urls'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://kiwi-client.vercel.app",
 ]
 
 TEMPLATES = [
