@@ -29,7 +29,7 @@ class HistoryDocCreateAPI(APIView):
 # 최근 편집된 전체 문서 목록
 class RecentEditedDocumentsAPI(APIView):
     def get(self, request):
-        latest_updates = HistoryDoc.objects.values('title').annotate(latest_update=Max('updated_at'))
+        latest_updates = HistoryDoc.objects.values('title').annotate(latest_update=Max('updated_at')).order_by('-latest_update')
 
         data = []
         for update in latest_updates[:5]:
