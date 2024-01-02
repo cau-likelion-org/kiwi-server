@@ -8,28 +8,71 @@ def list_elements_in_common(list1, list2):
                 return i, j
     return -1, -1
 
+def stringify_list(list):
+    string = ""
+    for i in list:
+        string += i
+    return string
+
 def tag_as_deleted(string):
-    return f"<deleted> {string} </deleted> "
+    return f"<deleted> {stringify_list(string)} </deleted> "
 
 def tag_as_added(string):
-    return f"<added> {string} </added> "
+    return f"<added> {stringify_list(string)} </added> "
 
 def tag_as_modified_from(string):
-    return f"<modified_from> {string} </modified_from> "
+    return f"<modified_from> {stringify_list(string)} </modified_from> "
 
 def tag_as_modified_to(string):
-    return f"<modified_to> {string} </modified_to> "
+    return f"<modified_to> {stringify_list(string)} </modified_to> "
 
 def tag_as_unchanged(string):
-    return f"{string} "
+    return f"{stringify_list(string)} "
 
+def split_string(string):
+    words = []
+    current_word = ""
+    for c in string:
+        if isPunctuation(c):
+            # current_word += c
+            words.append(current_word)
+            words.append(c)
+            current_word = ""
+        elif isNonSpaceWhitespace(c):
+            words.append(current_word)
+            current_word = ""
+            words.append(c)
+        elif c == " ":
+            if current_word == "":
+                continue
+            words.append(current_word)
+            current_word = ""
+        else:
+            current_word += c
+    
+    if current_word != "":
+        words.append(current_word)
+
+    print(words)
+
+    return words
+
+def isPunctuation(c):
+    if c in ".,!?": return True
+    if c in "[]{}()<>:": return True
+    if c in ";'": return True
+    if c in "\"`": return True
+    return False
+    
+def isNonSpaceWhitespace(c):
+    return c == "\n" or c == "\t"
 
 def diff_strings(old_string, new_string):
 
     resultString = ""
 
-    old_words = old_string.split()
-    new_words = new_string.split()
+    old_words = split_string(old_string)
+    new_words = split_string(new_string)
 
     old_words.append("")
     new_words.append("")
@@ -106,9 +149,9 @@ def diff_strings(old_string, new_string):
 
                 # 공통단어 : added
                 if(new_words[i_new] == old_words[saved_i_old]):
-
+                    new_temp.pop()
                     resultString += tag_as_added(' '.join(new_temp))
-                    
+
                     i_old = saved_i_old
                     i_new = i_new
                     old_temp = []
@@ -160,5 +203,8 @@ def diff_strings(old_string, new_string):
             resultString += tag_as_deleted(final_delete)
         if(final_add != ""):
             resultString += tag_as_added(final_add)
+
+    # 문장 부호 앞에 공백 있으면 제거. 해당하는 문장부호는 .,!?
+    resultString.replace(" .", ".").replace(" ,", ",").replace(" !", "!").replace(" ?", "?")
 
     return resultString
