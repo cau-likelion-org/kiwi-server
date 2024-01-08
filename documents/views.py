@@ -193,7 +193,8 @@ class BackLinkAPI(APIView):
         for currdoc in currdocs:
             historydoc = currdoc.history_doc
             #if 'http://127.0.0.1:8000/docs/recent/{}'.format(title) in historydoc.content:
-            if 'http://localhost:3000/viewer?title={}'.format(title) in historydoc.content:
+            #if 'http://localhost:3000/viewer?title={}'.format(title) in historydoc.content:
+            if 'https://kiwi-client.vercel.app/viewer?title={}'.format(title) in historydoc.content:
                 referenced_currdoc = CurrDoc.objects.filter(title=title).first()
                 if referenced_currdoc:
                     BackLink.objects.create(src=currdoc, dst=referenced_currdoc)
