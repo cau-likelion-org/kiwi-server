@@ -29,19 +29,50 @@ def tag_as_modified_to(string):
 def tag_as_unchanged(string):
     return f"{stringify_list(string)} "
 
+def fix_img_tag(wordList):
+    tagStart = -1
+    tagEnd = -1
+    insideTag = False
+    resultList = []
+    skipOnce = False
+    for i in range(len(wordList)):
+        if skipOnce:
+            skipOnce = False
+            continue
+        elif wordList[i] == "<" and wordList[i+1] == "img":
+            tagStart = i
+            insideTag = True
+        elif wordList[i] == "/" and wordList[i+1] == ">" and insideTag:
+            tagEnd = i
+            combinedString = ""
+            for j in range(tagStart, tagStart+2):
+                combinedString += wordList[j]
+            combinedString += " "
+            for j in range(tagStart+2, tagEnd+2):
+                combinedString += wordList[j]
+            resultList.append(combinedString)
+            tagStart = -1
+            tagEnd = -1
+            insideTag = False
+            skipOnce = True
+        else:
+            if not insideTag:
+                resultList.append(wordList[i])
+    return resultList
+
 def split_string(string):
     words = []
     current_word = ""
     for c in string:
-        if isPunctuation(c):
+        if isPunctuation(c): # 문장부호는 공백으로 분리
             # current_word += c
-            words.append(current_word)
-            words.append(c)
+            words.append(current_word) # 단어 추가
+            words.append(c) # 문장부호 추가
             current_word = ""
         elif isNonSpaceWhitespace(c):
-            words.append(current_word)
+            words.append(current_word) # 단어 추가
+            words.append(c) # 문장부호 추가 (줄바꿈 기호 보존해야함)
             current_word = ""
-            words.append(c)
         elif c == " ":
             if current_word == "":
                 continue
@@ -52,14 +83,20 @@ def split_string(string):
     
     if current_word != "":
         words.append(current_word)
+        current_word = ""
 
-    print(words)
+    for word in words:
+        if word == "":
+            words.remove(word)
+
+    words = fix_img_tag(words)
+    # print(words)
 
     return words
 
 def isPunctuation(c):
     if c in ".,!?": return True
-    if c in "[]{}()<>:": return True
+    if c in "[]():": return True
     if c in ";'": return True
     if c in "\"`": return True
     return False
@@ -85,6 +122,7 @@ def diff_strings(old_string, new_string):
 
     # 리스트가 끝나기 전까지 루프
     while i_old < len(old_words) and i_new < len(new_words):
+        # print(f"old: {old_words[i_old]} => new: {new_words[i_new]}")
         # 현재 가리킨 단어가 같은 단어인 경우
         if old_words[i_old] == new_words[i_new]:
             # 두 리스트 모두 끝에 도달한 경우 조기종료
@@ -94,6 +132,7 @@ def diff_strings(old_string, new_string):
                 break
 
             resultString += tag_as_unchanged(old_words[i_old])
+            # print(" -> unchanged")
             
             # 인디케이터 증가
             i_old += 1
@@ -151,6 +190,7 @@ def diff_strings(old_string, new_string):
                 if(new_words[i_new] == old_words[saved_i_old]):
                     new_temp.pop()
                     resultString += tag_as_added(' '.join(new_temp))
+                    # print(" -> added (type A)")
 
                     i_old = saved_i_old
                     i_new = i_new
@@ -161,8 +201,11 @@ def diff_strings(old_string, new_string):
                 # 공통단어 : deleted
                 if (old_words[i_old] == new_words[saved_i_new]):
                     
+                    old_temp.pop()
+
                     resultString += tag_as_deleted({' '.join(old_temp)})
-                    
+                    # print(" -> deleted (type A)")
+
                     i_old = i_old
                     i_new = saved_i_new
 
@@ -179,9 +222,9 @@ def diff_strings(old_string, new_string):
                     old_temp = old_temp[:i_old]
                     new_temp = new_temp[:i_new]
                     
-
                     resultString += tag_as_modified_from(' '.join(old_temp))
                     resultString += tag_as_modified_to(' '.join(new_temp))
+                    # print(" -> modified (type A)")
 
                     i_old = saved_i_old + i_old
                     i_new = saved_i_new + i_new
@@ -197,14 +240,19 @@ def diff_strings(old_string, new_string):
     if (final_delete != "" and final_add != ""):
         resultString += tag_as_modified_from(final_delete)
         resultString += tag_as_modified_to(final_add)
+        # print(" -> modified (type B)")
         
     else:
         if(final_delete != ""):
             resultString += tag_as_deleted(final_delete)
+            # print(" -> deleted (type B)")
         if(final_add != ""):
             resultString += tag_as_added(final_add)
+            # print(" -> added (type B)")
+
+    # print()
 
     # 문장 부호 앞에 공백 있으면 제거. 해당하는 문장부호는 .,!?
-    resultString.replace(" .", ".").replace(" ,", ",").replace(" !", "!").replace(" ?", "?")
+    resultString = resultString.replace(" .", ".").replace(" ,", ",").replace(" !", "!").replace(" ?", "?")
 
     return resultString
