@@ -130,19 +130,21 @@ class SearchHistoryDocAPI(APIView):
         exact_match = None
         partial_match = []
 
+        keyword = keyword.replace(" ", "")
+
         # 모든 CurrDoc에 대해 검색
         for curr_doc in all_curr_docs:
             history_doc = curr_doc.history_doc
 
             # title과 정확히 일치하는 문서 찾기
-            if history_doc.title == keyword:
+            if history_doc.title.replace(" ", "") == keyword:
                 serializer = HistoryDocSerializer(history_doc)
                 data = serializer.data
                 data['titleMatched'] = True
                 exact_match = data
                 break  
             # 부분 일치하는 문서 찾기
-            elif keyword in history_doc.title or keyword in history_doc.content:
+            elif keyword in history_doc.title.replace(" ", "") or keyword in history_doc.content:
                 serializer = HistoryDocSerializer(history_doc)
                 partial_match.append(serializer.data)
                 if len(partial_match) == 3:  
