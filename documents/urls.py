@@ -1,10 +1,10 @@
-from django.urls import path
+from django.urls import path, re_path
 from .views import *
 
 docs_urlpatterns = [
     path('image/',ImageUploadView.as_view(), name='이미지 업로드' ),
     path('', HistoryDocCreateAPI.as_view(), name = '문서 작성'),
-    path('recent/<str:title>/', DocDetailAPI.as_view(), name = '특정 문서 중 가장 최근 편집된 글 가져오기'),
+    re_path(r'^recent/(?P<title>.*)/$', DocDetailAPI.as_view(), name = '특정 문서 중 가장 최근 편집된 글 가져오기'), 
     path('random/', RandomDocAPI.as_view(), name = '임의 문서 가져오기'),    
     path('<str:generation>/', GenerationFilteredDocAPI.as_view(), name = '기수로 분류된 문서 전체 조회'),
     path('search/<str:keyword>/', SearchHistoryDocAPI.as_view(), name="문서 검색"),

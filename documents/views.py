@@ -9,6 +9,8 @@ from rest_framework.decorators import action
 from .models import HistoryDoc, CurrDoc, Generation, BackLink
 from .serializers import HistoryDocSerializer, ImageUploadSerializer
 from .service import *
+from urllib.parse import unquote
+import re
 
 # 문서 생성
 class HistoryDocCreateAPI(APIView):
@@ -78,6 +80,9 @@ class DocumentEditHistoryAPI(APIView):
 # 특정 문서 중 가장 최신의 문서 가져오기(CurrDoc 활용)
 class DocDetailAPI(APIView):
      def get(self, request, title, format=None):
+        
+        title = unquote(title)
+       
         try:
             curr_doc = CurrDoc.objects.get(history_doc__title=title)
             serializer = HistoryDocSerializer(curr_doc.history_doc)
@@ -123,28 +128,27 @@ class GenerationFilteredDocAPI(APIView):
                 status=status.HTTP_404_NOT_FOUND)
 
 #문서 검색
-
 class SearchHistoryDocAPI(APIView):
     def get(self, request, keyword):
         all_curr_docs = CurrDoc.objects.all()
         exact_match = None
         partial_match = []
 
-        keyword = keyword.replace(" ", "")
+        keyword = re.sub(r'\W+', '', keyword)
 
         # 모든 CurrDoc에 대해 검색
         for curr_doc in all_curr_docs:
             history_doc = curr_doc.history_doc
 
             # title과 정확히 일치하는 문서 찾기
-            if history_doc.title.replace(" ", "") == keyword:
+            if re.sub(r'\W+', '', history_doc.title) == keyword:
                 serializer = HistoryDocSerializer(history_doc)
                 data = serializer.data
                 data['titleMatched'] = True
                 exact_match = data
                 break  
             # 부분 일치하는 문서 찾기
-            elif keyword in history_doc.title.replace(" ", "") or keyword in history_doc.content:
+            elif keyword in re.sub(r'\W+', '', history_doc.title) or keyword in history_doc.content:
                 serializer = HistoryDocSerializer(history_doc)
                 partial_match.append(serializer.data)
                 if len(partial_match) == 3:  
