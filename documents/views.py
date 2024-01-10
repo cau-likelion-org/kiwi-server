@@ -141,7 +141,7 @@ class SearchHistoryDocAPI(APIView):
             history_doc = curr_doc.history_doc
 
             # title과 정확히 일치하는 문서 찾기
-            if re.sub(r'\W+', '', history_doc.title) == re.sub(r'\W+', '', keyword):
+            if history_doc.title == keyword :
                 serializer = HistoryDocSerializer(history_doc)
                 data = serializer.data
                 data['titleMatched'] = True
