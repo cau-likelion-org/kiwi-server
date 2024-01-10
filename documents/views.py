@@ -10,6 +10,7 @@ from .models import HistoryDoc, CurrDoc, Generation, BackLink
 from .serializers import HistoryDocSerializer, ImageUploadSerializer
 from .service import *
 from urllib.parse import unquote
+from urllib.parse import quote
 import re
 
 # 문서 생성
@@ -134,21 +135,22 @@ class SearchHistoryDocAPI(APIView):
         exact_match = None
         partial_match = []
 
-        keyword = re.sub(r'\W+', '', keyword)
+        keyword = unquote(keyword)
+        print(keyword)
 
         # 모든 CurrDoc에 대해 검색
         for curr_doc in all_curr_docs:
             history_doc = curr_doc.history_doc
 
             # title과 정확히 일치하는 문서 찾기
-            if re.sub(r'\W+', '', history_doc.title) == keyword:
+            if re.sub(r'\W+', '', history_doc.title) == re.sub(r'\W+', '', keyword):
                 serializer = HistoryDocSerializer(history_doc)
                 data = serializer.data
                 data['titleMatched'] = True
                 exact_match = data
                 break  
             # 부분 일치하는 문서 찾기
-            elif keyword in re.sub(r'\W+', '', history_doc.title) or keyword in history_doc.content:
+            elif keyword in history_doc.title or keyword in history_doc.content:
                 serializer = HistoryDocSerializer(history_doc)
                 partial_match.append(serializer.data)
                 if len(partial_match) == 3:  
@@ -195,6 +197,7 @@ class BackLinkAPI(APIView):
         print("Title received: ", title)
         currdocs = CurrDoc.objects.exclude(title=title)
         backlinks_created = []
+        title_encoded = quote(title)
 
         for currdoc in currdocs:
             historydoc = currdoc.history_doc
