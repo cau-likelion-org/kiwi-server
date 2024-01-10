@@ -135,8 +135,6 @@ class SearchHistoryDocAPI(APIView):
         exact_match = None
         partial_match = []
 
-        keyword = unquote(keyword)
-        print(keyword)
 
         # 모든 CurrDoc에 대해 검색
         for curr_doc in all_curr_docs:
