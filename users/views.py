@@ -86,6 +86,13 @@ def google_callback(request):
     email_res_json = email_response.json()
     email = email_res_json.get('email')
 
+    email_arr = email.split('@')
+    if email_arr[1].strip() != "likelion.org":
+        return JsonResponse({
+            "status" : "400",
+            "message" : "Bad Request",
+        }, status=status.HTTP_400_BAD_REQUEST)
+
     try:
         user = User.objects.get(email=email)
         token = RefreshToken.for_user(user)         # 자체 jwt 발급
