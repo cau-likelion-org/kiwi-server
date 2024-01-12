@@ -149,10 +149,11 @@ class SearchHistoryDocAPI(APIView):
                 break  
             # 부분 일치하는 문서 찾기
             elif keyword in history_doc.title or keyword in history_doc.content:
+                if len(partial_match) == 3:  
+                    continue
                 serializer = HistoryDocSerializer(history_doc)
                 partial_match.append(serializer.data)
-                if len(partial_match) == 3:  
-                    break
+                
 
         # 일치하는 문서가 있으면 그 문서만 반환
         if exact_match:
