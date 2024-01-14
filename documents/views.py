@@ -131,7 +131,7 @@ class GenerationFilteredDocAPI(APIView):
 #문서 검색
 class SearchHistoryDocAPI(APIView):
     def get(self, request, keyword):
-        all_curr_docs = CurrDoc.objects.all()
+        all_curr_docs = CurrDoc.objects.all().order_by('-history_doc__created_at')
         exact_match = None
         partial_match = []
 
@@ -148,12 +148,24 @@ class SearchHistoryDocAPI(APIView):
                 exact_match = data
                 break  
             # 부분 일치하는 문서 찾기
-            elif keyword in history_doc.title or keyword in history_doc.content:
-                if len(partial_match) == 3:  
-                    continue
-                serializer = HistoryDocSerializer(history_doc)
-                partial_match.append(serializer.data)
+            # elif keyword in history_doc.title or keyword in history_doc.content:
+            #     if len(partial_match) == 3:  
+            #         continue
+            #     serializer = HistoryDocSerializer(history_doc)
+            #     partial_match.append(serializer.data)
+            elif keyword in history_doc.title:
+                if len(partial_match) < 3:
+                    serializer = HistoryDocSerializer(history_doc)
+                    partial_match.append(serializer.data)
                 
+        # 일치하는 문서가 없고 부분 일치하는 문서가 3개 미만일 때, content에서 추가 탐색
+        if not exact_match and len(partial_match) < 3:
+            for curr_doc in all_curr_docs:
+                history_doc = curr_doc.history_doc
+                if keyword in history_doc.content:
+                    if len(partial_match) < 3:
+                        serializer = HistoryDocSerializer(history_doc)
+                        partial_match.append(serializer.data)
 
         # 일치하는 문서가 있으면 그 문서만 반환
         if exact_match:
