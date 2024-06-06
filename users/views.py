@@ -86,6 +86,7 @@ def google_callback(request):
     email_res_json = email_response.json()
     email = email_res_json.get('email')
 
+    # 기본 등록 회원 로그인과 likelion.org 계정 소유자 신규 가입만 가능 
     email_arr = email.split('@')
     if email_arr[1].strip() == "likelion.org":    # likelion.org 계정 제한
         return JsonResponse({
@@ -114,7 +115,6 @@ def google_callback(request):
         else:
             raise Exception('Not a CAU Mutsa member')
     except Exception:
-        print(email)
         # 멋사 회원이 아닌 계정
         return JsonResponse({
             "status" : "400",
