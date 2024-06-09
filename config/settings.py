@@ -135,7 +135,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
 	'default': {
 		'ENGINE': 'django.db.backends.mysql',
-		'NAME': 'mutsa_wiki_db',
+		'NAME': 'llwiki',
 		'USER': 'admin',
 		'PASSWORD': get_secret("DB_PASSWORD"),
 		'HOST': get_secret("DB_HOST"),
