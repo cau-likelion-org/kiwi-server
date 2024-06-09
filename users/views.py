@@ -64,9 +64,7 @@ def check_name(name):
 def google_callback(request):
     client_id = get_secret("GOOGLE_CLIENT_ID")
     client_secret = get_secret("GOOGLE_SECRET")
-    body = json.loads(request.body.decode('utf-8'))
-    code = body['code']
-    # code = request.GET.get('code')
+    code = request.POST.get('code')
     
     token_req = requests.post(f"https://oauth2.googleapis.com/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={REDIRECT_URL}")
     token_req_json = token_req.json()
@@ -123,9 +121,8 @@ def google_callback(request):
 
 class RegisterView(APIView):
     def post(self, request):
-        body = json.loads(request.body.decode('utf-8'))
-        email = body['email']
-        name = body['name']
+        email = request.POST.get('email')
+        name = request.POST.get('name')
         if email == "" or name == "":
             return JsonResponse({
                 "status" : "400",
