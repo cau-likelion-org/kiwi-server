@@ -1,0 +1,63 @@
+name: Django EC2 Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    name: "Django CI"
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.9, "3.10", 3.11, 3.12]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create JSON
+        id: create-json
+        uses: jsdaniell/create-json@1.2.3
+        with:
+          name: "secrets.json"
+          json: ${{ secrets.SECERT_JSON }}
+
+      - name: Run Tests
+        run: |
+          python manage.py test
+
+  cd:
+    name: "Django CD"
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: EC2 ssh connection test
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PEM }}
+          command_timeout: 3m
+          script: |
+            sudo apt-get update
+            sudo apt-get -y upgrade
+            cd ~/kiwi-server
+            source venv/bin/activate
+            git pull origin main
+            pip install -r requirements.txt
+            python manage.py makemigrations	
+            python manage.py migrate
+            sudo systemctl restart gunicorn
+            exit 0
