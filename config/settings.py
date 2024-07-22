@@ -67,7 +67,7 @@ THIRD_PARTY_APPS = [
     'rest_framework_simplejwt',
     'dj_rest_auth',
     'dj_rest_auth.registration',
-
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
 
     'allauth',
@@ -206,11 +206,12 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 
-    "SLIDING_TOKEN_LIFETIME": timedelta(days=7),
-    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=7),
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=30),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 
 # AWS 권한 설정
