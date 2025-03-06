@@ -111,14 +111,26 @@ def google_callback(request):
                     }
                 }
             }, status=status.HTTP_200_OK)
+    #     else:
+    #         raise Exception('Not a CAU Mutsa member')
+    # except Exception:
+    #     # 멋사 회원이 아닌 계정
+    #     return JsonResponse({
+    #         "status" : "400",
+    #         "message" : "Bad Request",
+    #     }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            raise Exception('Not a CAU Mutsa member')
+            raise Exception('Signup Required')
     except Exception:
-        # 멋사 회원이 아닌 계정
+        print(email)
+        # 가입이 필요한 회원
         return JsonResponse({
-            "status" : "400",
-            "message" : "Bad Request",
-        }, status=status.HTTP_400_BAD_REQUEST)
+            "status" : "202",
+            "message" : "Signup Required",
+            "data" : {
+                "email" : email
+            }
+        }, status=status.HTTP_202_ACCEPTED)
 
 class RegisterView(APIView):
     def post(self, request):
