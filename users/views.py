@@ -9,6 +9,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from random import *
 from .models import *
+import random # random 모듈을 사용하기 위해 추가
+
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -193,13 +195,13 @@ class RandomNameView(APIView):
         if len(adj) == 0 or len(noun) == 0:
             save_words()
 
-        rand_adj = adj[randrange(200)]
-        rand_noun = noun[randrange(200)]
+        rand_adj = random.choice(adj)
+        rand_noun = random.choice(noun)
         name = rand_adj + " " + rand_noun
 
         while check_name(name):         # 랜덤 닉네임 중복 없을 때까지 반복
-            rand_adj = adj[randrange(200)]
-            rand_noun = noun[randrange(200)]
+            rand_adj = random.choice(adj)
+            rand_noun = random.choice(noun)
             name = rand_adj + " " + rand_noun
 
         return JsonResponse({
